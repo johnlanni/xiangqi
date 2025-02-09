@@ -457,7 +457,6 @@ def print_pos(pos, width=2, piece_type='unicode'):
         print(' ', CHESS_ROW - 1 - i, ' '.join(pieces.get(p, p) for p in row))
     print('    '+space.join('abcdefghi\n'))
 
-
 def parse_move(move, board, is_red):
     # import ipdb
     # ipdb.set_trace()
@@ -493,26 +492,29 @@ def main(arg):
     searcher = Searcher()
     while True:
         print_pos(hist[-1], arg.width, arg.piece)
-
         if hist[-1].score <= -MATE_LOWER:
-            print("You lost")
+            print("Red lost")
             break
 
-        # We query the user until she enters a (pseudo) legal move.
-        move = None
-
+        # Get AI move
+        from ai_agent import get_ai_move
         while True:
-            match = re.match('([a-i][0-9])' * 2, input('Your move: '))
-            # match = re.match('([a-i][0-9])' * 2, 'e0d0')
+            print('Red is thinking...')
+            current_board = hist[-1].board
+            move_str = get_ai_move(current_board, True)  # 红方视角
+            if not move_str:
+                # print("AI failed to generate move")
+                continue
+            
+            match = re.match('([a-i][0-9])' * 2, move_str)
             if match:
                 move = parse(match.group(1)), parse(match.group(2))
-                if move not in hist[-1].gen_moves():
-                    print('Invalid move')
-                else:
+                if move in hist[-1].gen_moves():
                     break
+                # print(f'AI generated invalid move: {move_str}')
             else:
-                # Inform the user when invalid input (e.g. "help") is entered
-                print("Please enter a move like h2e2")
+                continue
+                # print(f'AI returned invalid format: {move_str}')
         parse_move(move, hist[-1].board, True)
         hist.append(hist[-1].move(move))
 
@@ -521,20 +523,40 @@ def main(arg):
         print_pos(hist[-1].rotate(), arg.width, arg.piece)
 
         if hist[-1].score <= -MATE_LOWER:
-            print("You won")
+            print("Red won")
             break
 
-        # Fire up the engine to look for a move.
-        start = time.perf_counter()
-        for _, move, score in searcher.search(hist[-1], hist):
-            if time.perf_counter() - start > 1:
-                break
+        if arg.ai:
+            # Use LLM AI mode
+            from ai_agent import get_ai_move
+            while True:
+                print('Black is thinking...')
+                # 获取未旋转的原初棋盘并传给AI黑方视角
+                current_board = hist[-1].rotate().board  # 获取旋转后未旋转的原初棋盘
+                move_str = get_ai_move(current_board, False)  # 使用黑方视角参数 
+                if not move_str:
+                    # print("AI failed to generate move")
+                    continue
+                
+                match = re.match('([a-i][0-9])' * 2, move_str)
+                if match:
+                    move = parse(match.group(1)), parse(match.group(2))
+                    if move in hist[-1].gen_moves():
+                        break
+                    # print(f'AI generated invalid move: {move_str}')
+                else:
+                    continue
+                    # print(f'AI returned invalid format: {move_str}')
+        else:
+            # Original search algorithm
+            start = time.perf_counter()
+            for _, move, score in searcher.search(hist[-1], hist):
+                if time.perf_counter() - start > 1:
+                    break
 
-        if score == MATE_UPPER:
-            print("Checkmate!")
+            if score == MATE_UPPER:
+                print("Checkmate!")
 
-        # The black player moves from a rotated position, so we have to
-        # 'back rotate' the move before printing it.
         print("My move: ", end='')
         parse_move(move, hist[-1].board, False)
         hist.append(hist[-1].move(move))
@@ -546,4 +568,6 @@ if __name__ == '__main__':
                         help="Choose unicode if you can distringuish these two character:🩤, 🩣. Otherwise choose chinese.")
     parser.add_argument('-w', '--width', type=int, default=1,
                         help='num of space between two pieces.')
+    parser.add_argument('--ai', action='store_true',
+                        help='Use LLM AI instead of built-in search algorithm')
     main(parser.parse_args())
