@@ -20,7 +20,7 @@ def get_board_description(board, is_red=True):
     piece_map = {
         'R': '車', 'H': '馬', 'E': '相', 'A': '仕', 'K': '帅',
         'C': '炮', 'P': '兵', 'r': '车', 'h': '马', 'e': '象', 
-        'a': '士', 'k': '将', 'c': '炮', 'p': '卒', '.': '〇'
+        'a': '士', 'k': '将', 'c': '砲', 'p': '卒', '.': '〇'
     }
     # 获取有效棋盘内容（排除边界行）
     rows = board.split('\n')[2:12]
@@ -48,7 +48,7 @@ def get_ai_move(agent, board_state, last_action, trash_talk, is_red=True, **kwar
 
     prompt = f"""你是一个中国象棋大师，请根据当前棋盘状态分析最佳走法。按照以下格式返回：
 <thinking>
-1. 注意为了区分棋子，{"对方" if is_red else "我方"}的炮用砲表示
+1. 为了区分棋子，{"对方" if is_red else "我方"}的炮用砲表示
 2. 给出我方棋子的所有坐标: {"車馬相仕帅仕相馬車炮炮兵兵兵兵兵" if is_red else "车马象士将士象马车砲砲卒卒卒卒卒"}
 3. 给出对方棋子的所有坐标: {"车马象士将士象马车砲砲卒卒卒卒卒" if is_red else "車馬相仕帅仕相馬車炮炮兵兵兵兵兵"}
 4. 用侵略性的下法，尽最大努力吃对方的棋子
@@ -57,7 +57,7 @@ def get_ai_move(agent, board_state, last_action, trash_talk, is_red=True, **kwar
 # 尽量保持沉默，除非一定要诱导对方犯错，那么加上下面的trash_talk
 <trash_talk>引导对方犯错的话术</trash_talk>
 
-我方执{"帅" if is_red else "將"}，在棋盘下半部分，请不要移动对方的棋子。
+我方执{"帅" if is_red else "将"}，在棋盘下半部分，请不要移动对方的棋子。
 
 刚刚对方走了一招：{last_action}，并跟你解释他这么下的原因：{trash_talk}
 
