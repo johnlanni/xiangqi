@@ -3,7 +3,7 @@ import re
 from openai import OpenAI
 
 # 根据玩家颜色创建不同的客户端配置
-def create_llm_client(api_url, api_key, model, is_red):
+def create_llm_client(api_url, api_key, model):
     """Create LLM client with specified configuration"""
     return OpenAI(
         base_url=api_url or "http://127.0.0.1:8080/v1",
@@ -11,8 +11,8 @@ def create_llm_client(api_url, api_key, model, is_red):
     )
 
 class AIAgent:
-    def __init__(self, api_url, api_key, model, is_red):
-        self.client = create_llm_client(api_url, api_key, model, is_red)
+    def __init__(self, api_url, api_key, model):
+        self.client = create_llm_client(api_url, api_key, model)
         self.model = model or "deepseek-v3"
 
 def get_board_description(board, is_red=True):
@@ -41,17 +41,11 @@ def get_board_description(board, is_red=True):
     desc.append(coord_line)
     return '\n'.join(desc)
 
-def get_ai_move(board_state, last_action, trash_talk, is_red=True, **kwargs):
+def get_ai_move(agent, board_state, last_action, trash_talk, is_red=True, **kwargs):
     """Get AI move using LLM API"""
     # 获取当前玩家的参数
     key_prefix = 'red' if is_red else 'black'
-    agent = AIAgent(
-        api_url=kwargs.get(f'{key_prefix}_api_url'),
-        api_key=kwargs.get(f'{key_prefix}_api_key'),
-        model=kwargs.get(f'{key_prefix}_model'), 
-        is_red=is_red
-    )
-    
+
     prompt = f"""你是一个中国象棋大师，请根据当前棋盘状态分析最佳走法。按照以下格式返回：
 <thinking>
 1. 注意为了区分棋子，{"对方" if is_red else "我方"}的炮用砲表示

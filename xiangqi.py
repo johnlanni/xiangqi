@@ -505,11 +505,11 @@ def main(arg):
 
         if arg.ai:
             # 如果是AI模式
-            from ai_agent import get_ai_move
+            from ai_agent import get_ai_move, AIAgent
             while True:
                 print('Red is thinking...')
                 current_board = hist[-1].board
-                move_str, trash_talk = get_ai_move(current_board, black_last_action, black_trash_talk, True)  # 红方视角
+                move_str, trash_talk = get_ai_move(AIAgent(arg.red_api_url, arg.red_api_key, arg.red_model), current_board, black_last_action, black_trash_talk, True)  # 红方视角
                 if not move_str:
                     # print("AI failed to generate move")
                     continue
@@ -548,12 +548,12 @@ def main(arg):
 
         if arg.ai:
             # Use LLM AI mode
-            from ai_agent import get_ai_move
+            from ai_agent import get_ai_move, AIAgent
             while True:
                 print('Black is thinking...')
                 # 获取未旋转的原初棋盘并传给AI黑方视角
                 current_board = hist[-1].rotate().board  # 获取旋转后未旋转的原初棋盘
-                move_str, trash_talk = get_ai_move(current_board, red_last_action, red_trash_talk, False)  # 使用黑方视角参数 
+                move_str, trash_talk = get_ai_move(AIAgent(arg.black_api_url, arg.black_api_key, arg.black_model), current_board, red_last_action, red_trash_talk, False)  # 使用黑方视角参数 
                 if not move_str:
                     # print("AI failed to generate move")
                     continue
