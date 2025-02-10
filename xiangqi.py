@@ -500,14 +500,14 @@ def main(arg):
     while True:
         print_pos(hist[-1], arg.width, arg.piece)
         if hist[-1].score <= -MATE_LOWER:
-            print("Red lost")
+            print("红方输了")
             break
 
         if arg.ai:
             # 如果是AI模式
             from ai_agent import get_ai_move, AIAgent
             while True:
-                print('Red is thinking...')
+                print(f'红方选手({arg.red_model})思考中...')
                 current_board = hist[-1].board
                 move_str, trash_talk = get_ai_move(AIAgent(arg.red_api_url, arg.red_api_key, arg.red_model), current_board, black_last_action, black_trash_talk, True)  # 红方视角
                 if not move_str:
@@ -534,8 +534,8 @@ def main(arg):
                 else:
                     print("Please enter a move like h2e2")
         red_last_action = parse_move(move, hist[-1].board, True)
-        print(f"Red played: {red_last_action}")
-        print(f"Red said: {red_trash_talk}")
+        print(f"红方棋招: {red_last_action}")
+        print(f"并说到: {red_trash_talk}")
         hist.append(hist[-1].move(move))
 
         # After our move we rotate the board and print it again.
@@ -543,14 +543,14 @@ def main(arg):
         print_pos(hist[-1].rotate(), arg.width, arg.piece)
 
         if hist[-1].score <= -MATE_LOWER:
-            print("Red won")
+            print("红方获胜")
             break
 
         if arg.ai:
             # Use LLM AI mode
             from ai_agent import get_ai_move, AIAgent
             while True:
-                print('Black is thinking...')
+                print(f'黑方选手({arg.black_model})思考中...')
                 # 获取未旋转的原初棋盘并传给AI黑方视角
                 current_board = hist[-1].rotate().board  # 获取旋转后未旋转的原初棋盘
                 move_str, trash_talk = get_ai_move(AIAgent(arg.black_api_url, arg.black_api_key, arg.black_model), current_board, red_last_action, red_trash_talk, False)  # 使用黑方视角参数 
@@ -579,8 +579,8 @@ def main(arg):
                 print("Checkmate!")
 
         black_last_action = parse_move(move, hist[-1].board, False)
-        print(f"Black played: {black_last_action}")
-        print(f"Black said: {black_trash_talk}")
+        print(f"黑方棋招: {black_last_action}")
+        print(f"并说到: {black_trash_talk}")
         hist.append(hist[-1].move(move))
 
 

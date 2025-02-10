@@ -48,25 +48,27 @@ def get_ai_move(agent, board_state, last_action, trash_talk, is_red=True, **kwar
 
     prompt = f"""你是一个中国象棋大师，请根据当前棋盘状态分析最佳走法。按照以下格式返回：
 <thinking>
-1. 为了区分棋子，{"对方" if is_red else "我方"}的炮用砲表示
-2. 给出我方棋子的所有坐标: {"車馬相仕帅仕相馬車炮炮兵兵兵兵兵" if is_red else "车马象士将士象马车砲砲卒卒卒卒卒"}
-3. 给出对方棋子的所有坐标: {"车马象士将士象马车砲砲卒卒卒卒卒" if is_red else "車馬相仕帅仕相馬車炮炮兵兵兵兵兵"}
-4. 用侵略性的下法，尽最大努力吃对方的棋子
+1. 给出我方棋子的所有坐标: {"車馬相仕帅仕相馬車炮炮兵兵兵兵兵" if is_red else "车马象士将士象马车砲砲卒卒卒卒卒"}
+2. 给出对方棋子的所有坐标: {"车马象士将士象马车砲砲卒卒卒卒卒" if is_red else "車馬相仕帅仕相馬車炮炮兵兵兵兵兵"}
+3. 分析当前的布局状态，同时结合短期问题和长期布局考虑，说明走哪一步是合理的
 </thinking>
 <move>走法坐标（例如h2e2）</move>
-# 尽量保持沉默，除非一定要诱导对方犯错，那么加上下面的trash_talk
-<trash_talk>引导对方犯错的话术</trash_talk>
+# 根据局势可以跟对方礼貌地聊天，比如评论或赞赏对方的棋招，或者回复对方的聊天，或者尝试劝降对方
+<talk>聊天</talk>
 
 我方执{"帅" if is_red else "将"}，在棋盘下半部分，请不要移动对方的棋子。
 
-刚刚对方走了一招：{last_action}，并跟你解释他这么下的原因：{trash_talk}
+刚刚对方走了一招：{last_action}，并跟你聊天：{trash_talk}
 
 当前棋盘状态：
 
 {get_board_description(board_state, is_red)}
 
+注意，为了区分棋子，{"对方" if is_red else "我方"}的炮用砲表示
+
 棋盘布局一共是十行九列, 棋盘上已经标注了坐标, 行坐标从下到上是0-9, 纵坐标从左到右是{"a-i" if is_red else "i-a"},其中〇表示空位
-请分析后给出最佳走法："""
+
+请分析后给出走法："""
     # print(prompt)
     try:
         response = agent.client.chat.completions.create(
@@ -85,6 +87,8 @@ def get_ai_move(agent, board_state, last_action, trash_talk, is_red=True, **kwar
         # 实时记录流式响应到日志
         move_str = ""
         for chunk in response:
+            if len(chunk.choices) == 0:
+                continue
             delta = chunk.choices[0].delta
             if delta.content:
                 with open("llm.log", "a", encoding="utf-8") as f:
@@ -100,7 +104,7 @@ def get_ai_move(agent, board_state, last_action, trash_talk, is_red=True, **kwar
         # 提取移动指令
         # 提取各部分内容
         move_match = re.search(r'<move>([a-i][0-9][a-i][0-9])</move>', clean_move)
-        trash_talk_match = re.search(r'<trash_talk>(.+?)</trash_talk>', clean_move)
+        trash_talk_match = re.search(r'<talk>(.+?)</talk>', clean_move)
 
         if move_match:
             move_str = move_match.group(1)
