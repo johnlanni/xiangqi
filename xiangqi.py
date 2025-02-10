@@ -12,8 +12,11 @@ from itertools import count
 ###############################################################################
 uni_pieces = {'R': '🩤', 'H': '🩣', 'E': '🩢', 'A': '🩡', 'K': '🩠', 'C': '🩥', 'P': '🩦',
               'r': '🩫', 'h': '🩪', 'e': '🩩', 'a': '🩨', 'k': '🩧', 'c': '🩬', 'p': '🩭', '.': '·'}
-chinese_pieces = {'R': '车', 'H': '马', 'E': '相', 'A': '仕', 'K': '帅', 'C': '炮', 'P': '兵',
-                  'r': '車', 'h': '马', 'e': '象', 'a': '士', 'k': '将', 'c': '砲', 'p': '卒', '.': '· '}
+chinese_pieces = {
+        'R': '車', 'H': '馬', 'E': '相', 'A': '仕', 'K': '帅',
+        'C': '炮', 'P': '兵', 'r': '车', 'h': '马', 'e': '象', 
+        'a': '士', 'k': '将', 'c': '砲', 'p': '卒', '.': '· '
+    }
 
 CHESS_ROW = 10
 CHESS_COLUMN = 9
@@ -483,39 +486,56 @@ def parse_move(move, board, is_red):
             all_row.remove(move[0])
             row = '前' if all_row[0] > move[0] else '后'
             print(row+name+action+destionation)
-            return
-    print(name+row+action+destionation)
+            return ""
+    return name+row+action+destionation
 
 
 def main(arg):
     hist = [Position(initial, 0)]
     searcher = Searcher()
+    red_trash_talk = ''
+    black_trash_talk = ''
+    red_last_action = ''
+    black_last_action = ''
     while True:
         print_pos(hist[-1], arg.width, arg.piece)
         if hist[-1].score <= -MATE_LOWER:
             print("Red lost")
             break
 
-        # Get AI move
-        from ai_agent import get_ai_move
-        while True:
-            print('Red is thinking...')
-            current_board = hist[-1].board
-            move_str = get_ai_move(current_board, True)  # 红方视角
-            if not move_str:
-                # print("AI failed to generate move")
-                continue
-            
-            match = re.match('([a-i][0-9])' * 2, move_str)
-            if match:
-                move = parse(match.group(1)), parse(match.group(2))
-                if move in hist[-1].gen_moves():
-                    break
-                # print(f'AI generated invalid move: {move_str}')
-            else:
-                continue
-                # print(f'AI returned invalid format: {move_str}')
-        parse_move(move, hist[-1].board, True)
+        if arg.ai:
+            # 如果是AI模式
+            from ai_agent import get_ai_move
+            while True:
+                print('Red is thinking...')
+                current_board = hist[-1].board
+                move_str, trash_talk = get_ai_move(current_board, black_last_action, black_trash_talk, True)  # 红方视角
+                if not move_str:
+                    # print("AI failed to generate move")
+                    continue
+                match = re.match('([a-i][0-9])' * 2, move_str)
+                if match:
+                    move = parse(match.group(1)), parse(match.group(2))
+                    if move in hist[-1].gen_moves():
+                        red_trash_talk = trash_talk
+                        break
+                    # print(f'AI generated invalid move: {move_str}')
+                else:
+                    continue
+                    # print(f'AI returned invalid format: {move_str}')
+        else:
+            while True:
+                match = re.match('([a-i][0-9])' * 2, input('Your move: '))
+                if match:
+                    move = parse(match.group(1)), parse(match.group(2))
+                    if move in hist[-1].gen_moves():
+                        break
+                    print('Invalid move')
+                else:
+                    print("Please enter a move like h2e2")
+        red_last_action = parse_move(move, hist[-1].board, True)
+        print(f"Red played: {red_last_action}")
+        print(f"Red said: {red_trash_talk}")
         hist.append(hist[-1].move(move))
 
         # After our move we rotate the board and print it again.
@@ -533,7 +553,7 @@ def main(arg):
                 print('Black is thinking...')
                 # 获取未旋转的原初棋盘并传给AI黑方视角
                 current_board = hist[-1].rotate().board  # 获取旋转后未旋转的原初棋盘
-                move_str = get_ai_move(current_board, False)  # 使用黑方视角参数 
+                move_str, trash_talk = get_ai_move(current_board, red_last_action, red_trash_talk, False)  # 使用黑方视角参数 
                 if not move_str:
                     # print("AI failed to generate move")
                     continue
@@ -542,6 +562,7 @@ def main(arg):
                 if match:
                     move = parse(match.group(1)), parse(match.group(2))
                     if move in hist[-1].gen_moves():
+                        black_trash_talk = trash_talk
                         break
                     # print(f'AI generated invalid move: {move_str}')
                 else:
@@ -557,17 +578,28 @@ def main(arg):
             if score == MATE_UPPER:
                 print("Checkmate!")
 
-        print("My move: ", end='')
-        parse_move(move, hist[-1].board, False)
+        black_last_action = parse_move(move, hist[-1].board, False)
+        print(f"Black played: {black_last_action}")
+        print(f"Black said: {black_trash_talk}")
         hist.append(hist[-1].move(move))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="xiangqi(Chinese Chess)")
-    parser.add_argument('-p', '--piece', default='unicode', type=str, choices=['unicode', 'chinese'],
+    # Model configuration
+    parser.add_argument('--ai', action='store_true', help='启动AI模式')
+    # 红方配置
+    parser.add_argument('--red-api-url', type=str, help='红方API服务地址')
+    parser.add_argument('--red-api-key', type=str, help='红方API密钥')
+    parser.add_argument('--red-model', type=str, help='红方模型名称')
+    # 黑方配置
+    parser.add_argument('--black-api-url', type=str, help='黑方API服务地址')
+    parser.add_argument('--black-api-key', type=str, help='黑方API密钥')
+    parser.add_argument('--black-model', type=str, help='黑方模型名称')
+    # Display settings
+    parser.add_argument('-p', '--piece', default='chinese', type=str, choices=['unicode', 'chinese'],
                         help="Choose unicode if you can distringuish these two character:🩤, 🩣. Otherwise choose chinese.")
-    parser.add_argument('-w', '--width', type=int, default=1,
+    parser.add_argument('-w', '--width', type=int, default=2,
                         help='num of space between two pieces.')
-    parser.add_argument('--ai', action='store_true',
-                        help='Use LLM AI instead of built-in search algorithm')
     main(parser.parse_args())
+
