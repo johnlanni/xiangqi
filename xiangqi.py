@@ -497,6 +497,7 @@ def main(arg):
     black_trash_talk = ''
     red_last_action = ''
     black_last_action = ''
+    is_initial = True
     while True:
         print_pos(hist[-1], arg.width, arg.piece)
         if hist[-1].score <= -MATE_LOWER:
@@ -509,7 +510,7 @@ def main(arg):
             while True:
                 print(f'红方选手({arg.red_model})思考中...')
                 current_board = hist[-1].board
-                move_str, trash_talk = get_ai_move(AIAgent(arg.red_api_url, arg.red_api_key, arg.red_model), current_board, black_last_action, black_trash_talk, True)  # 红方视角
+                move_str, trash_talk = get_ai_move(AIAgent(arg.red_api_url, arg.red_api_key, arg.red_model), current_board, black_last_action, black_trash_talk, True, is_initial)  # 红方视角
                 if not move_str:
                     # print("AI failed to generate move")
                     continue
@@ -536,6 +537,7 @@ def main(arg):
         red_last_action = parse_move(move, hist[-1].board, True)
         print(f"红方棋招: {red_last_action}")
         print(f"并说到: {red_trash_talk}")
+        is_initial = False
         hist.append(hist[-1].move(move))
 
         # After our move we rotate the board and print it again.

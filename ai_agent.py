@@ -36,12 +36,15 @@ def get_board_description(board, is_red=True):
         desc_line = f"{line_num} {translated}"
         desc.append(desc_line)
     
+    # 添加楚河汉界
+    desc.insert(5, "    楚河    汉界    ")
+
     # 根据玩家视角添加坐标标记方向
     coord_line = "  a b c d e f g h i" if is_red else "  i h g f e d c b a"
     desc.append(coord_line)
     return '\n'.join(desc)
 
-def get_ai_move(agent, board_state, last_action, trash_talk, is_red=True, **kwargs):
+def get_ai_move(agent, board_state, last_action, trash_talk, is_red=True, is_initial=False, **kwargs):
     """Get AI move using LLM API"""
     # 获取当前玩家的参数
     key_prefix = 'red' if is_red else 'black'
@@ -53,14 +56,14 @@ def get_ai_move(agent, board_state, last_action, trash_talk, is_red=True, **kwar
 3. 分析当前的布局状态，同时结合短期问题和长期布局考虑，说明走哪一步是合理的
 </thinking>
 <move>走法坐标（例如h2e2）</move>
-# 根据局势可以跟对方礼貌地聊天，比如评论或赞赏对方的棋招，或者回复对方的聊天，或者尝试劝降对方
+# 主动跟对方就当期局势发起简洁且尽量幽默的对话，或者回复对方的聊天，你也可以根据局势尝试劝降对方
 <talk>聊天</talk>
 
 我方执{"帅" if is_red else "将"}，在棋盘下半部分，请不要移动对方的棋子。
 
 刚刚对方走了一招：{last_action}，并跟你聊天：{trash_talk}
 
-当前棋盘状态：
+当前棋盘状态({"刚开局，你先走第一步" if is_initial else "棋局已经进行一段时间了"}):
 
 {get_board_description(board_state, is_red)}
 
