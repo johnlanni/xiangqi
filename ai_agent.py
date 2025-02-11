@@ -39,8 +39,7 @@ def get_board_description(board, is_red=True):
     # 添加楚河汉界
     desc.insert(5, "    楚河    汉界    ")
 
-    # 根据玩家视角添加坐标标记方向
-    coord_line = "  a b c d e f g h i" if is_red else "  i h g f e d c b a"
+    coord_line = "  a b c d e f g h i"
     desc.append(coord_line)
     return '\n'.join(desc)
 
@@ -56,7 +55,7 @@ def get_ai_move(agent, board_state, last_action, trash_talk, is_red=True, is_ini
 3. 分析当前的布局状态，同时结合短期问题和长期布局考虑，说明走哪一步是合理的
 </thinking>
 <move>走法坐标（例如h2e2）</move>
-# 主动跟对方就当期局势发起简洁且尽量幽默的对话，或者回复对方的聊天，你也可以根据局势尝试劝降对方
+# 主动跟对方就当期局势发起简洁且尽量幽默的对话，或者回复对方的聊天，你也可以根据局势尝试劝降对方，因为对方跟你的坐标系不一样，不要打出棋子坐标位置
 <talk>聊天</talk>
 
 我方执{"帅" if is_red else "将"}，在棋盘下半部分，请不要移动对方的棋子。
@@ -67,9 +66,7 @@ def get_ai_move(agent, board_state, last_action, trash_talk, is_red=True, is_ini
 
 {get_board_description(board_state, is_red)}
 
-注意，为了区分棋子，{"对方" if is_red else "我方"}的炮用砲表示
-
-棋盘布局一共是十行九列, 棋盘上已经标注了坐标, 行坐标从下到上是0-9, 纵坐标从左到右是{"a-i" if is_red else "i-a"},其中〇表示空位
+注意，为了区分棋子，{"对方" if is_red else "我方"}的炮用砲表示，棋盘上的〇表示空位，不要把棋子走到非空位，除非这个走位能吃掉对方棋子
 
 请分析后给出走法："""
     # print(prompt)
