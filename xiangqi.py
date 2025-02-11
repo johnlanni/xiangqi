@@ -534,8 +534,8 @@ def main(arg):
                     print('Invalid move')
                 else:
                     print("Please enter a move like h2e2")
-        red_last_action = parse_move(move, hist[-1].board, True)
-        print(f"红方棋招: {red_last_action}")
+        red_last_action = move_str
+        print(f"红方棋招: {parse_move(move, hist[-1].board, True)}")
         print(f"并说到: {red_trash_talk}")
         is_initial = False
         hist.append(hist[-1].move(move))
@@ -553,8 +553,7 @@ def main(arg):
             from ai_agent import get_ai_move, AIAgent
             while True:
                 print(f'黑方选手({arg.black_model})思考中...')
-                # 获取未旋转的原初棋盘并传给AI黑方视角
-                current_board = hist[-1].rotate().board  # 获取旋转后未旋转的原初棋盘
+                current_board = hist[-1].rotate().board  # 获取旋转后的原初棋盘
                 move_str, trash_talk = get_ai_move(AIAgent(arg.black_api_url, arg.black_api_key, arg.black_model), current_board, red_last_action, red_trash_talk, False)  # 使用黑方视角参数 
                 if not move_str:
                     # print("AI failed to generate move")
@@ -580,8 +579,8 @@ def main(arg):
             if score == MATE_UPPER:
                 print("Checkmate!")
 
-        black_last_action = parse_move(move, hist[-1].board, False)
-        print(f"黑方棋招: {black_last_action}")
+        black_last_action = move_str
+        print(f"黑方棋招: {parse_move(move, hist[-1].board, False)}")
         print(f"并说到: {black_trash_talk}")
         hist.append(hist[-1].move(move))
 

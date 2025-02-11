@@ -22,12 +22,13 @@ def get_board_description(board, is_red=True):
         'C': '炮', 'P': '兵', 'r': '车', 'h': '马', 'e': '象', 
         'a': '士', 'k': '将', 'c': '砲', 'p': '卒', '.': '〇'
     }
-    # 获取有效棋盘内容（排除边界行）
+
+    # 获取完整棋盘内容
     rows = board.split('\n')[2:12]
-    
+
     # 根据玩家视角调整行顺序
     if not is_red:
-        rows = rows[::-1]  # 黑方视角需要反转行顺序
+        rows = [row[::-1] for row in rows[::-1]]  # 先上下反转，再对每行左右反转
         
     desc = []
     for idx, row in enumerate(rows):
@@ -48,6 +49,10 @@ def get_ai_move(agent, board_state, last_action, trash_talk, is_red=True, is_ini
     # 获取当前玩家的参数
     key_prefix = 'red' if is_red else 'black'
 
+    # 反转坐标
+    char_map = str.maketrans('abcdefghi0123456789', 'ihgfedcba9876543210')
+    last_action = last_action.translate(char_map) if last_action else ""
+
     prompt = f"""你是一个中国象棋大师，请根据当前棋盘状态分析最佳走法。按照以下格式返回：
 <thinking>
 1. 给出我方棋子的所有坐标: {"車馬相仕帅仕相馬車炮炮兵兵兵兵兵" if is_red else "车马象士将士象马车砲砲卒卒卒卒卒"}
@@ -60,7 +65,7 @@ def get_ai_move(agent, board_state, last_action, trash_talk, is_red=True, is_ini
 
 我方执{"帅" if is_red else "将"}，在棋盘下半部分，请不要移动对方的棋子。
 
-刚刚对方走了一招：{last_action}，并跟你聊天：{trash_talk}
+对方刚刚走了一步：{last_action}，并跟你聊天：{trash_talk}
 
 当前棋盘状态({"刚开局，你先走第一步" if is_initial else "棋局已经进行一段时间了"}):
 
