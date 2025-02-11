@@ -26,19 +26,18 @@ def get_board_description(board, is_red=True):
     # 获取完整棋盘内容
     rows = board.split('\n')[2:12]
 
-    # 根据玩家视角调整行顺序
     if not is_red:
-        rows = [row[::-1] for row in rows[::-1]]  # 先上下反转，再对每行左右反转
+        rows = [row.strip()[::-1] for row in rows[::-1]]  # 先上下反转，再对每行去空白后左右反转
         
     desc = []
     for idx, row in enumerate(rows):
-        translated = ''.join([piece_map.get(c, c) for c in row[1:]])
+        translated = ''.join([piece_map.get(c, c) for c in row])
         line_num = 9 - idx
-        desc_line = f"{line_num} {translated}"
+        desc_line = f"{line_num}{translated}" if is_red else f"{line_num} {translated}"
         desc.append(desc_line)
     
     # 添加楚河汉界
-    desc.insert(5, "    楚河    汉界    ")
+    desc.insert(5, "    楚河      汉界    ")
 
     coord_line = "  a b c d e f g h i"
     desc.append(coord_line)
@@ -73,7 +72,7 @@ def get_ai_move(agent, board_state, last_action, trash_talk, is_red=True, is_ini
 
 注意，为了区分棋子，{"对方" if is_red else "我方"}的炮用砲表示，棋盘上的〇表示空位，不要把棋子走到非空位，除非这个走位能吃掉对方棋子
 
-请分析后给出走法："""
+尽量多调动不同的棋子，不要只调动炮，请分析后给出走法："""
     # print(prompt)
     try:
         response = agent.client.chat.completions.create(
